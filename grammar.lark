@@ -1,0 +1,11 @@
+VAR: /\w+/
+LBRACK: "["
+RBRACK: "]"
+SPACE: /\s+|,/
+ARROW: "->"
+vargroup: VAR+
+bgroup: LBRACK vargroup RBRACK
+source: (vargroup|bgroup)+
+target: vargroup
+start: source ARROW target
+%ignore SPACE
