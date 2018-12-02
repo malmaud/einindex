@@ -49,6 +49,16 @@ def parse(pattern):
 
 
 def apply(pattern: IndexPattern, x, idx):
+    source = pattern.source
+    if len(source) == 1:
+        l = source[0]
+        if l.level == 1:
+            if len(l.vars) == 1:
+                return x[idx]
+    return apply_general(pattern, x, idx)
+
+
+def apply_general(pattern: IndexPattern, x, idx):
     var_set = {}
     for var_list in pattern.source:
         if var_list.level == 1:

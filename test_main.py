@@ -19,3 +19,11 @@ def test_apply(pattern):
     idx = torch.tensor([[1, 0], [0, 1]])
     res = einindex.apply(parse, x, idx)
     return res
+
+
+def test_slice():
+    pattern = "[i]->i"
+    x = torch.tensor([1, 2, 3, 4]).float()
+    idx = torch.tensor([0, 2])
+    res = einindex.index(pattern, x, idx)
+    return res
