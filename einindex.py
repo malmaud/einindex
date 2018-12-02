@@ -5,6 +5,8 @@ from typing import List, Optional
 from dataclasses import dataclass
 from pathlib import Path
 import lark
+import itertools
+from functools import lru_cache
 
 
 @dataclass
@@ -19,6 +21,7 @@ class IndexPattern:
     target: VarList
 
 
+@lru_cache()
 def load_grammar():
     grammar_text = Path("grammar.lark").read_text()
     grammar = lark.Lark(grammar_text)
@@ -43,3 +46,34 @@ def parse(pattern):
     tree = grammar.parse(pattern)
     new_tree = Transformer().transform(tree)
     return new_tree
+
+
+def apply(pattern: IndexPattern, x, idx):
+    var_set = {}
+    for var_list in pattern.source:
+        if var_list.level == 1:
+            for var_idx, var_name in enumerate(var_list.vars):
+                var_set[var_name] = var_idx
+            break
+    out = x.new_zeros(size=idx.size())
+    size_set = [range(dim) for dim in idx.size()]
+    for i in itertools.product(*size_set):
+        idx_tuple = []
+        for var_list in pattern.source:
+            if var_list.level == 0:
+                for var in var_list.vars:
+                    pos = var_set[var]
+                    idx_tuple.append(i[pos])
+            elif var_list.level == 1:
+                inner_tuple = []
+                for var in var_list.vars:
+                    pos = var_set[var]
+                    inner_tuple.append(i[pos])
+                index_value = idx[tuple(inner_tuple)]
+                idx_tuple.append(index_value)
+        out[i] = x[tuple(idx_tuple)]
+    return out
+
+
+def index(pattern: str, x, idx):
+    return apply(parse(pattern), x, idx)
