@@ -4,7 +4,7 @@ import torch
 
 
 def test_parse():
-    res = einindex.parse("i j, [j]i ->i")
+    res = einindex.einindex.parse("i j, [j]i ->i")
     return res
 
 
