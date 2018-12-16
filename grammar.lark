@@ -1,11 +1,13 @@
 VAR: /\w+/
-LBRACK: "["
-RBRACK: "]"
-SPACE: /\s+|,/
-ARROW: "->"
-vargroup: VAR+
-bgroup: LBRACK vargroup RBRACK
-source: (vargroup|bgroup)+
-target: vargroup
-start: source ARROW target
+SPACE: /\s+/
 %ignore SPACE
+ARROW: "->"
+RBRACK: "]"
+LBRACK: "["
+COMMA: ","
+varlist: VAR+
+indexexpr: LBRACK VAR RBRACK
+indexparam:  indexexpr varlist
+source: varlist COMMA indexparam
+target: varlist
+start: source ARROW target
