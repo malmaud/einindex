@@ -45,7 +45,7 @@ class IndexExpr:
 
 @lru_cache()
 def load_grammar():
-    grammar_text = Path("grammar.lark").read_text()
+    grammar_text = (Path(__file__).parent / "grammar.lark").read_text()
     grammar = lark.Lark(grammar_text)
     return grammar
 

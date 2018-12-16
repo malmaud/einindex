@@ -1,1 +1,4 @@
-numpy==1.14.5
+numpy
+lark-parser
+torch
+dataclasses
