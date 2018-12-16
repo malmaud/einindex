@@ -3,13 +3,8 @@ import pytest
 import torch
 
 
-@pytest.fixture
-def pattern():
-    return "i j, [j]i ->i"
-
-
-def test_parse(pattern):
-    res = einindex.parse(pattern)
+def test_parse():
+    res = einindex.parse("i j, [j]i ->i")
     return res
 
 
