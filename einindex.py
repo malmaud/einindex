@@ -1,4 +1,3 @@
-import re
 import torch
 import typing
 from typing import List, Optional
@@ -7,11 +6,18 @@ from pathlib import Path
 import lark
 import itertools
 from functools import lru_cache
+import copy
 
 
 @dataclass
 class Var:
     var: str
+
+    def __eq__(self, other):
+        return self.var == other.var
+
+    def __hash__(self):
+        return hash(("Var", self.var))
 
 
 @dataclass
@@ -69,3 +75,40 @@ def parse(pattern):
     tree = grammar.parse(pattern)
     new_tree = Transformer().transform(tree)
     return new_tree
+
+
+def apply_pattern(pattern: IndexExpr, main, indices):
+    pattern = copy.deepcopy(pattern)
+    main_vars = pattern.source.main.vars
+    index_target = pattern.source.indices.index
+    index_vars = pattern.source.indices.index_vars.vars
+    idx = 0
+    splice_out: List[int] = []
+    while len(main_vars) > len(index_vars):
+        if idx < len(index_vars) and main_vars[idx] == index_vars[idx]:
+            idx += 1
+            continue
+        splice_out.append(idx)
+        index_vars.insert(idx, main_vars[idx])
+        slices: List = []
+        for i in range(len(index_vars)):
+            if i == idx:
+                slices.append(None)
+            else:
+                slices.append(slice(None))
+        indices = indices[tuple(slices)]
+        idx += 1
+    index_dim = main_vars.index(index_target)
+    result = main.gather(index_dim, indices)
+    splices: List = []
+    for dim in range(len(main_vars)):
+        if dim in splice_out:
+            splices.append(0)
+        else:
+            splices.append(slice(None))
+    result = result[tuple(splices)]
+    return result
+
+
+def index(pattern: str, main, indices):
+    return apply_pattern(parse(pattern), main, indices)
