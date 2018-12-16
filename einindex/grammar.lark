@@ -6,7 +6,7 @@ RBRACK: "]"
 LBRACK: "["
 COMMA: ","
 varlist: VAR+
-indexexpr: LBRACK VAR RBRACK
+indexexpr: LBRACK varlist RBRACK
 indexparam:  indexexpr varlist
 source: varlist COMMA indexparam
 target: varlist

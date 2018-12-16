@@ -7,6 +7,7 @@ import lark
 import itertools
 from functools import lru_cache
 import copy
+import einops
 
 
 @dataclass
@@ -27,7 +28,7 @@ class VarList:
 
 @dataclass
 class IndexParam:
-    index: Var
+    index: VarList
     index_vars: VarList
 
 
@@ -55,7 +56,7 @@ class Transformer(lark.Transformer):
         return VarList(vars=[Var(var.value) for var in vars])
 
     def indexexpr(self, expr):
-        return Var(expr[1].value)
+        return expr[1]
 
     def indexparam(self, params):
         return IndexParam(index=params[0], index_vars=params[1])
@@ -77,13 +78,40 @@ def parse(pattern):
     return new_tree
 
 
-def apply_pattern(pattern: IndexExpr, main, indices):
+class EinindexError(Exception):
+    pass
+
+
+def apply_pattern(main, indices, pattern: IndexExpr):
     pattern = copy.deepcopy(pattern)
     main_vars = pattern.source.main.vars
-    index_target = pattern.source.indices.index
+    index_targets = pattern.source.indices.index.vars
+
+    n_targets = len(index_targets)
+    n_main_vars = len(main_vars)
+    if n_targets > 1:
+        if n_targets != 2:
+            raise EinindexError("Only 1 or 2 index variables are supported currently.")
+        source_str = ""
+        target_str = ""
+        for var_idx, var in enumerate(main_vars):
+            source_str += f"{var.var} "
+            if var_idx == (n_main_vars - n_targets):
+                target_str += "("
+            target_str += f"{var.var} "
+        target_str += ")"
+        # TODO make this section more general
+        inner_dim = main.size(2)
+        main = einops.rearrange(main, f"{source_str}->{target_str}")
+        indices = indices[:, 0] * inner_dim + indices[:, 1]
+        index_targets = [index_targets[0]]
+        main_vars = main_vars[: (n_main_vars - n_targets + 1)]
+
     index_vars = pattern.source.indices.index_vars.vars
     idx = 0
     splice_out: List[int] = []
+    if len(index_vars) > len(main_vars):
+        raise EinindexError("Invalid index")
     while len(main_vars) > len(index_vars):
         if idx < len(index_vars) and main_vars[idx] == index_vars[idx]:
             idx += 1
@@ -98,7 +126,7 @@ def apply_pattern(pattern: IndexExpr, main, indices):
                 slices.append(slice(None))
         indices = indices[tuple(slices)]
         idx += 1
-    index_dim = main_vars.index(index_target)
+    index_dim = main_vars.index(index_targets[0])
     result = main.gather(index_dim, indices)
     splices: List = []
     for dim in range(len(main_vars)):
@@ -110,5 +138,5 @@ def apply_pattern(pattern: IndexExpr, main, indices):
     return result
 
 
-def index(pattern: str, main, indices):
-    return apply_pattern(parse(pattern), main, indices)
+def index(main, indices, pattern: str):
+    return apply_pattern(main, indices, parse(pattern))

@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="einindex",
-    version="0.0.2",
+    version="0.0.3",
     author="Jon Malmaud",
     author_email="malmaud@gmail.com",
     packages=["einindex"],
