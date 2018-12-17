@@ -2,3 +2,4 @@ numpy
 lark-parser
 torch
 dataclasses
+einops
