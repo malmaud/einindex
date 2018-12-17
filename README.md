@@ -1,6 +1,6 @@
 # Einindex
 
-Write indexing operations in an elegant syntax inspired by einstein notation.
+Write indexing operations in an elegant syntax inspired by Einstein notation.
 
 ## Usage
 
