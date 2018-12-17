@@ -17,7 +17,7 @@ from einindex import index
 Given an array `x` with dimensions `i` and a set of indices `idx` with dimension `j`, `x[idx]` can be written as
 
 ```python
-index(x, idx, "i, [i]j->i")
+index(x, idx, "i, [i]j->j")
 ```
 ---
 
